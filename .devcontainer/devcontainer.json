@@ -1,0 +1,10 @@
+{
+  "name": "gdrl-dev",                     // Name of the development container
+  "build": {
+    "dockerfile": "Dockerfile",           // The Dockerfile to use for building the container
+    "context": "."                        // The build context is the current directory
+  },
+  "workspaceFolder": "/workspaces/gdrl",  // The path to the workspace inside the container
+  "forwardPorts": [8888, 6006],           // Ports to forward from the container to the host
+  "remoteUser": "jovyan"                  // The user to use inside the container
+}
