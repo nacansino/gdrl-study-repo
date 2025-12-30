@@ -22,8 +22,6 @@ ENV LANG=C.UTF-8 \
 RUN apt-get update && \
     apt-get install -y --no-install-recommends apt-utils && \
     apt-get install -y --no-install-recommends \
-    nodejs \
-    npm \
     build-essential \
     bzip2 \
     ca-certificates \
@@ -31,13 +29,7 @@ RUN apt-get update && \
     curl \
     emacs \
     ffmpeg \
-    flex \
-    fluidsynth \
-    fonts-liberation \
-    gifsicle \
     git \
-    imagemagick \
-    inkscape \
     jed \
     ffmpeg \
     libboost-all-dev \
@@ -48,15 +40,10 @@ RUN apt-get update && \
     libsm6 \
     libxext-dev \
     libxrender1 \
-    lmodern \
     locales \
     nano \
     netcat \
-    pandoc \
     python3-dev \
-    qtbase5-dev \
-    qtchooser \
-    qt5-qmake \
     sudo \
     swig \
     unzip \
@@ -93,8 +80,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Make /opt/venv and put it first in PATH
 RUN python3 -m venv /opt/venv
 ENV PATH=/opt/venv/bin:$PATH
-
 RUN pip install --upgrade pip setuptools wheel
+
+# Change ownership of venv to NB_USER so later installs don’t need sudo
+RUN chown -R ${NB_UID}:${NB_GID} /opt/venv
+USER ${NB_UID}
 
 # ---- Jupyter + tooling ----
 # Modern JupyterLab no longer requires node for most extensions, but we keep node/npm installed
@@ -111,7 +101,7 @@ RUN pip install \
 # ---- PyTorch (CUDA 12.9 / cu129) ----
 # PyTorch publishes a cu129 index; if stable wheels ever lag, use nightly as noted below.
 RUN pip install --index-url https://download.pytorch.org/whl/cu129 \
-    torch torchvision torchaudio
+    torch torchvision
 
 # ---- RL / Gym stack (closest equivalent to your original) ----
 # gym is largely superseded by gymnasium; keeping gym here to match your old notebooks.
@@ -122,23 +112,27 @@ RUN pip install \
     asciinema \
     && pip install "gymnasium[atari]" \
     && pip install "git+https://github.com/pybox2d/pybox2d#egg=Box2D" \
-    && pip install "git+https://github.com/mimoralea/gym-bandits#egg=gym-bandits" \
-    && pip install "git+https://github.com/mimoralea/gym-walk#egg=gym-walk" \
-    && pip install "git+https://github.com/mimoralea/gym-aima#egg=gym-aima"
+    && pip install "git+https://github.com/nacansino/gym-bandits" \
+    && pip install "git+https://github.com/nacansino/gym-walk" \
+    && pip install "git+https://github.com/nacansino/gym-aima"
 
 # ---- Runtime notebook config ----
 # Expose same ports as your old image
 EXPOSE 8888 6006
 
+# Change back to root to configure workspaces dir
+USER root
+
 # Create default notebooks dir
-RUN mkdir -p /mnt/notebooks/logs && chown -R ${NB_UID}:${NB_GID} /mnt/notebooks
+RUN mkdir -p /workspaces/gdrl/notebooks/logs && chown -R ${NB_UID}:${NB_GID} /workspaces/gdrl/notebooks
 
 # ---- Final setup ----
 # Copy run script and make it executable
 COPY run.sh /usr/local/bin/run.sh
 RUN chmod +x /usr/local/bin/run.sh
 
-# Switch to user and set working dir
+# Now switch back to NB_USER
+# Set working dir and entrypoint
 USER ${NB_UID}
-WORKDIR /mnt/notebooks
+WORKDIR /workspaces/gdrl
 ENTRYPOINT ["/usr/local/bin/run.sh"]
