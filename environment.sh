@@ -3,9 +3,10 @@
 # Create virtual environment in the current directory
 python3 -m venv .venv
 
-# Install requirements
+# Activate the virtual environment
+source .venv/bin/activate
 
-python3 -m venv .venv
+# Install requirements
 pip install --upgrade pip setuptools wheel
 
 # ---- Jupyter + tooling ----
@@ -39,6 +40,3 @@ pip install --index-url https://download.pytorch.org/whl/cu129 \
 
 echo "Virtual environment created successfully in .venv"
 echo "To activate it, run: source .venv/bin/activate"
-
-echo "Activating the virtual environment..."
-source .venv/bin/activate
