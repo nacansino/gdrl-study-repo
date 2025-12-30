@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# First install ubuntu packages via apt-get
+sudo apt-get update && sudo apt-get install -y \
+    build-essential \
+    python3-dev python3-venv python3-pip \
+    swig
+
 # Create virtual environment in the current directory
 python3 -m venv .venv
 
@@ -22,7 +28,7 @@ pip install \
     ipywidgets
 
 # ---- RL / Gym stack (closest equivalent to your original) ----
-RUN pip install \
+pip install \
     gymnasium \
     pygame \
     pybullet \
