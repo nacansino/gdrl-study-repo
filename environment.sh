@@ -25,7 +25,7 @@ pip install \
     pyglet \
     tornado==6.* \
     matplotlib \
-    ipywidgets
+    ipywidgets==7.7.1
 
 # ---- RL / Gym stack (closest equivalent to your original) ----
 pip install \
