@@ -164,7 +164,7 @@ Below are the algorithms covered.
 - `Every-visit Monte Carlo (EVMC)`: FV monte carlo but the value of V is updated on every visit
 - `Temporal Difference (TD)`: Compared to MC, instead of using G as target, we use the current estimation V[s] in order to compute the TD target. As an effect we need not to run the trajectory to completion but can update every step
 - `n-step TD (NTD)`: A mix of MC and TD, Use the value of G for the first N steps, and use the estimation of V[s] for the succeeding states.
-- `TD(lambda)`: Use the concept of **eligibility traces** where we keep track of states where we've been, then update V according to these traces. Mathematically it's like lambda-weighing n-step TD's.
+- `TD(lambda)`: Use the concept of **eligibility traces** where we keep track of states where we've been, then update V according to these traces. Mathematically it's like lambda-weighing n-step TD's. If lambda=1 we are weighing the actual returns G compared to the estimated returns V so TD(lambda=1) just becomes normal `MC` algorithm. If lambda=0 we use the estimated value V which is equivalent to normal `TD`.
 
 ### Chapter 6
 
@@ -188,3 +188,29 @@ These chapter laid out improvements in the algorithms covered in Chapter 6. We s
 **Specific algorithms covered**:
 - `SARSA(lambda)`: Same as SARSA, but uses eligibility traces (either accumulating trace or replacing trace) to distribute credit assignments to previous states
 - `Watkins's Q(lambda)`: Same as Q-learning (uses the greedy policy as target), but uses eligibility traces (either accumulating trace or replacing trace) to distribute credit assignments to previous states
+- `Dyna-Q`: A model-based RL technique. It's similar to Q-learning but there is a planning loop where we build the model through `T_count(s,a,s')` and `R_count(s,a,s')` by randomly sampling previously visited state-action pairs, then updating Q using this model. Given enough episodes we see that the model is able to learn the MDP. Key: samples **random one-step transitions from anywhere** in the state space `n` times (a hyperparameter).
+- `Trajectory Sampling`: A model-based RL technique. Similar to Dyna-Q, during planning we run full trajectories from time to time, instead of random one-step transitions n times. In doing so we either use on-policy or off-policy to run the trajectory instead of random action.
+
+**Algorithm Comparison (based on Claude)**:
+
+| Algorithm | Sample Efficiency | Robustness to Approximation | Best Use Case |
+|-----------|-------------------|-----------|---------------|
+| SARSA(λ) | Moderate | High | Safe exploration; risk-sensitive tasks |
+| Q(λ) | Moderate-High | Moderate-Low | When optimal policy is priority over safety |
+| Dyna-Q | High | Moderate | When environment model is accurate/learnable |
+| Trajectory Sampling | High (compute-efficient) | Low-Moderate | Large state spaces; focused exploration |
+
+**Key Research Findings**:
+
+- **Replacing vs. Accumulating Traces**: Replacing traces generally outperform accumulating traces in practice. Accumulating traces can lead to unbounded trace values and instability, especially in tasks with loops or repeated state visits. Replacing traces are more robust.
+
+- **SARSA(λ) vs. Q(λ)**: SARSA(λ) tends to learn safer policies because it accounts for exploration in its updates (on-policy). Q(λ) can be more aggressive but suffers from trace-cutting—when an exploratory action is taken, the eligibility trace is reset, reducing the benefit of λ in highly exploratory settings.
+
+- **λ Selection**: Higher λ (closer to 1) speeds up credit assignment in sparse reward settings but increases variance. Lower λ is more stable but slower to propagate rewards. Empirically, λ ∈ [0.7, 0.9] often works well.
+
+- **Dyna-Q Strengths/Weaknesses**: Dramatically improves sample efficiency when the learned model is accurate. However, in stochastic or complex environments, model errors compound and can degrade performance (model bias problem).
+
+- **Trajectory Sampling vs. Dyna-Q**: Trajectory sampling focuses computational effort on states likely to be visited under the current policy, making it more efficient in large state spaces. Dyna-Q's uniform random sampling wastes effort on irrelevant states. Research shows trajectory sampling converges faster in practice for most MDPs.
+
+- **On-policy vs. Off-policy with Traces**: Eligibility traces work more naturally with on-policy methods. Off-policy methods with traces (like Watkins's Q(λ)) require trace cutting or importance sampling corrections, which can reduce their effectiveness.
+
