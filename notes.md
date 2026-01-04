@@ -153,7 +153,9 @@ In order to explain the concept, the Multi-Armed Bandits (MAB) environment was i
 ### Chapter 5
 
 In the previous chapter we emphasized on learning when we don't have access to the MDP but simplifying it to nonsequential environments. 
-This chapter talks about sequential environments where we focus on techniques on learning the `State-Value function (V)` of **sequential** and **evaluative** MDPs, so now we have more than one state and an episode can run with more than one timestep. This problem is often called the `prediction problem` because our goal is to estimate the value function.
+This chapter talks about sequential environments where we focus on techniques on learning the `State-Value function (V)` of a policy in **sequential** and **evaluative** MDPs, so now we have more than one state and an episode can run with more than one timestep. This problem is often called the `prediction problem` because our goal is to estimate the value function.
+
+Note we are still not learning the optimal policy here, in this chapter we are given a policy and our task is to learn the Value function. As an analogy, these methods are like `Policy Evaluation` discussed in Chapter 3, except that we don't need MDP in order to get the value of a policy.
 
 Below are the algorithms covered.
 
@@ -166,3 +168,23 @@ Below are the algorithms covered.
 
 ### Chapter 6
 
+These chapter now focuses on **finding optimal policies** in the RL environments. We work on top of prediction algorithms discussed in Chapter 5 and promote them to yield optimal policies. Thus, we now move on to doing `control` as opposed to only `prediction` in Chapter 5. Now we do both `policy evaluation` and `policy improvement`.
+
+**Specific algorithms covered**:
+- `Monte Carlo Control (MC)`: Implements Monte Carlo to predict Q, and uses Epsilon-greedy policy improvement to derive the behavior policy. This is repeatedly done for a given number of episodes.
+- `SARSA`: Contrary to MC which finishes an episode before updating the policy, Sarsa uses Temporal Difference (TD) learning to estimate the action-value function Q*. It also uses epsilon-greedy policy improvement to select the new behavior policy. Since we use the same behavior policy and target policy, we call this "on-policy".
+- `Q-Learning`: Similar to SARSA, except that in the calculation of TD target, we select the next action greedily and not based on the behavior policy. (this separation makes Q-learning an "off-policy" since behavior and target policy is the same)
+- `Double-Q Learning`: Similar to Q-learning, but contrary to Q-learning, Double Q-learning maintains two separate Q functions (Q1 and Q2) to reduce the overestimation bias of Q-learning. In one case, Q1 is used to generate behavior, and the other is used as target. In the other case, Q2 is used to generate behavior and the other is used as target. The algorithm chooses between one or the other in a 50-50 fashion.
+
+**Terms**
+- `behavior policy`: the policy used to generate behavior (i.e., to select actions)
+- `target policy`: the policy that is being evaluated and improved
+- `Off-policy vs. On-policy`: On-policy algorithms use the same policy for both behavior and target policy (e.g., SARSA). Off-policy algorithms use different policies for behavior and target (e.g., Q-learning).
+
+### Chapter 7
+
+These chapter laid out improvements in the algorithms covered in Chapter 6. We still deal with environments that are both **sequential** and **evaluative**.
+
+**Specific algorithms covered**:
+- `SARSA(lambda)`: Same as SARSA, but uses eligibility traces (either accumulating trace or replacing trace) to distribute credit assignments to previous states
+- `Watkins's Q(lambda)`: Same as Q-learning (uses the greedy policy as target), but uses eligibility traces (either accumulating trace or replacing trace) to distribute credit assignments to previous states

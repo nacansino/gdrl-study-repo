@@ -112,9 +112,11 @@ P = env.unwrapped.P
 
 ---
 
-## 6. Replace deprecated NumPy dtype `np.object`
+## 6. Replace deprecated NumPy dtypes
 
-NumPy removed `np.object`.
+NumPy 1.20+ deprecated and NumPy 2.0 removed several type aliases.
+
+### 6a. `np.object` → `object`
 
 **Before**
 ```python
@@ -125,6 +127,22 @@ np.array(data, np.object)
 ```python
 np.array(data, object)
 ```
+
+### 6b. `np.int` → `np.int32` (or `np.int64`, `int`)
+
+**Before**
+```python
+x = np.int(5)
+arr = np.array([1, 2], dtype=np.int)
+```
+
+**After**
+```python
+x = np.int32(5)
+arr = np.array([1, 2], dtype=np.int32)
+```
+
+> **Note:** Choose `np.int32` or `np.int64` based on your precision needs. Use Python's built-in `int` for scalar conversions.
 
 ---
 
@@ -148,6 +166,8 @@ Always verify environment IDs when migrating.
 
 ---
 
+## 
+
 ## Quick Migration Checklist
 
 - [ ] `gym` → `gymnasium as gym`
@@ -157,6 +177,7 @@ Always verify environment IDs when migrating.
 - [ ] `done = terminated or truncated`
 - [ ] `env.env` → `env.unwrapped`
 - [ ] `np.object` → `object`
+- [ ] `np.int` → `np.int32` or `np.int64`
 - [ ] Verify env IDs (`v0` → `v1`)
 
 ---
