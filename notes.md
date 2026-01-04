@@ -214,3 +214,11 @@ These chapter laid out improvements in the algorithms covered in Chapter 6. We s
 
 - **On-policy vs. Off-policy with Traces**: Eligibility traces work more naturally with on-policy methods. Off-policy methods with traces (like Watkins's Q(λ)) require trace cutting or importance sampling corrections, which can reduce their effectiveness.
 
+### Chapter 8
+
+In the previous chapters, we learned how to solve RL problems in an *exhaustive* manner, meaning we make a table of values for the state-value (V) or action-value (Q) functions that we use to solve for the optimal policy. These approaches we have done so far, for both planning (MC, TD, TD-lambda) and control (MC-Control, SARSA/SARSA-lambda, Q-Learning, Watkins's Q-lambda, Dyna-Q, Trajectory Sampling) are all tabular methods.
+
+But tabular methods are sample-inefficient. Meaning when we are running these algorithms, we only update one value in the Q or V tables, and have to run multiple episodes just to learn. Now, what happens if we have a lot of states like the 8-bit Atari Games (160px x 192px x 255), or infinite-states like Cartpole or in robotics. These table methods become impractical to use.
+
+Now comes non-linear function approximator methods. Non-linear since our targets are usually non-linear. The approach is not to *exhaustively* tabulate state-value V or action-value functions, but to *approximate* these targets. We can use several function approximator but this chapter focuses on *deep reinforcement learning* which hints on using neural networks as function approximators, but in general other non- neural network functions can be used (ex. kernel methods, tree-based model).
+
