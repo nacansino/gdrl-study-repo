@@ -1,0 +1,52 @@
+[project]
+name = "gdrl-study"
+version = "0.1.0"
+description = "Grokking Deep Reinforcement Learning study repository"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    # Jupyter + tooling
+    "jupyterlab",
+    "notebook",
+    "jupyterhub",
+    "tensorboard",
+    "tqdm",
+    "numpy",
+    "scipy",
+    "pandas",
+    "scikit-learn",
+    "pyyaml",
+    "tabulate",
+    "pyglet",
+    "tornado>=6.0,<7.0",
+    "matplotlib",
+    "ipywidgets>=7.7.1,<8.0",
+
+    # RL / Gym stack
+    "gymnasium",
+    "gymnasium[atari]",
+    "gymnasium[other]",
+    "pygame",
+    "pybullet",
+    "asciinema",
+
+    # Git dependencies (installed separately via uv pip)
+    # Box2D, gym-bandits, gym-walk, gym-aima
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[tool.uv]
+# PyTorch with CUDA 11.8 requires extra index
+extra-index-url = ["https://download.pytorch.org/whl/cu118"]
+
+[tool.uv.sources]
+# Git dependencies
+Box2D = { git = "https://github.com/pybox2d/pybox2d" }
+gym-bandits = { git = "https://github.com/nacansino/gym-bandits" }
+gym-walk = { git = "https://github.com/nacansino/gym-walk" }
+gym-aima = { git = "https://github.com/nacansino/gym-aima" }

@@ -3,46 +3,33 @@
 # First install ubuntu packages via apt-get
 sudo apt-get update && sudo apt-get install -y \
     build-essential \
-    python3-dev python3-venv python3-pip \
+    python3-dev \
     swig
 
-# Create virtual environment in the current directory
-python3 -m venv .venv
+# Install uv if not already installed
+if ! command -v uv &> /dev/null; then
+    echo "Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    # Add uv to PATH for current session
+    export PATH="$HOME/.local/bin:$PATH"
+fi
 
-# Activate the virtual environment
-source .venv/bin/activate
+# Create virtual environment and install dependencies using uv
+uv venv .venv --python 3.12
 
-# Install requirements
-pip install --upgrade pip setuptools wheel
+# Install main dependencies from pyproject.toml
+uv pip install -e .
 
-# ---- Jupyter + tooling ----
-# Modern JupyterLab no longer requires node for most extensions, but we keep node/npm installed
-# since your original image used lab extensions and other JS tools.
-pip install \
-    jupyterlab notebook jupyterhub \
-    tensorboard \
-    tqdm numpy scipy pandas scikit-learn pyyaml tabulate \
-    pyglet \
-    tornado==6.* \
-    matplotlib \
-    ipywidgets==7.7.1
+# Install PyTorch with CUDA 11.8
+# Change this depending on your CUDA version: https://pytorch.org/get-started/locally/
+uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
 
-# ---- RL / Gym stack (closest equivalent to your original) ----
-pip install \
-    gymnasium \
-    pygame \
-    pybullet \
-    asciinema \
-    && pip install "gymnasium[atari]" \
-    && pip install "git+https://github.com/pybox2d/pybox2d#egg=Box2D" \
-    && pip install "git+https://github.com/nacansino/gym-bandits" \
-    && pip install "git+https://github.com/nacansino/gym-walk" \
-    && pip install "git+https://github.com/nacansino/gym-aima"
+# Install git dependencies
+uv pip install "git+https://github.com/pybox2d/pybox2d#egg=Box2D"
+uv pip install "git+https://github.com/nacansino/gym-bandits"
+uv pip install "git+https://github.com/nacansino/gym-walk"
+uv pip install "git+https://github.com/nacansino/gym-aima"
 
-# ---- PyTorch (CUDA 12.9 / cu129) ----
-# PyTorch publishes a cu129 index; if stable wheels ever lag, use nightly as noted below.
-pip install --index-url https://download.pytorch.org/whl/cu129 \
-    torch torchvision
-
+echo ""
 echo "Virtual environment created successfully in .venv"
 echo "To activate it, run: source .venv/bin/activate"

@@ -1,5 +1,27 @@
 # Notes
 
+## Creating environment
+
+This project uses [uv](https://docs.astral.sh/uv/) for fast Python package management.
+
+### Setup
+
+Run the setup script:
+```bash
+./environment.sh
+```
+
+### Running Commands
+
+With uv, you don't need to activate the virtual environment. Use `uv run`:
+```bash
+# Start Jupyter Lab
+uv run jupyter lab
+
+# Run a Python script
+uv run python my_script.py
+```
+
 ## Changing from `gym` to `gymnasium`
 
 ### API change 1: return value of env.reset()
