@@ -30,8 +30,15 @@ dependencies = [
     "pybullet",
     "asciinema",
 
-    # Git dependencies (installed separately via uv pip)
-    # Box2D, gym-bandits, gym-walk, gym-aima
+    # PyTorch (CUDA 11.8)
+    "torch",
+    "torchvision",
+
+    # Git dependencies
+    "Box2D",
+    "gym-bandits",
+    "gym-walk",
+    "gym-aima",
 ]
 
 [project.optional-dependencies]
@@ -40,11 +47,16 @@ dev = [
     "ruff",
 ]
 
-[tool.uv]
-# PyTorch with CUDA 11.8 requires extra index
-extra-index-url = ["https://download.pytorch.org/whl/cu118"]
+[[tool.uv.index]]
+name = "pytorch-cu118"
+url = "https://download.pytorch.org/whl/cu118"
+explicit = true
 
 [tool.uv.sources]
+# PyTorch from CUDA 11.8 index
+torch = { index = "pytorch-cu118" }
+torchvision = { index = "pytorch-cu118" }
+
 # Git dependencies
 Box2D = { git = "https://github.com/pybox2d/pybox2d" }
 gym-bandits = { git = "https://github.com/nacansino/gym-bandits" }
