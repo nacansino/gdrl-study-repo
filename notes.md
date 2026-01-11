@@ -244,3 +244,97 @@ But tabular methods are sample-inefficient. Meaning when we are running these al
 
 Now comes non-linear function approximator methods. Non-linear since our targets are usually non-linear. The approach is not to *exhaustively* tabulate state-value V or action-value functions, but to *approximate* these targets. We can use several function approximator but this chapter focuses on *deep reinforcement learning* which hints on using neural networks as function approximators, but in general other non- neural network functions can be used (ex. kernel methods, tree-based model).
 
+**Specific algorithms covered**:
+- `NFQ (Neural Fitted Q-iteration)` : vanilla deep RL algorithm that uses neural networks to approximate the action-value function Q. The algorithm is similar to Q-learning, except that instead of using a table to store Q values, we use a neural network. Experiences are collected per episode, and the model updated every batch_size.
+
+There are several knobs to tune here:
+1. Value target: Could be v(s), q(s,a), or action-advanage a(s,a)
+2. Selecting a non-linear function: here we use a neural network architecture with state-action-in-value-out (s,a -> q(s,a)), or state-in-values-out (s->[q(s|a1) q(s|a2)]). In the book implementation we used state-in-values-out.
+3. Loss: Minimizing the loss with respect to the optimal action-value function q*, that is L = difference between q* - Q(s,a;theta). But which q* do we use if we don't have access to it? See #4. Which metric do we use? See #6.
+4. Target for policy evaluation: MC, TD, N-step, TD(lambda). Sometimes we also call the on-policy version the `SARSA target` and the off-policy version the `Q-learning` target.
+5. Exploration strategy : greedy, epsilon-greedy, softmax, etc.
+6. Loss Function: The particular metric to use. MSE (L2), or L1.
+7. Optimizaton method: select similar to typical supervised learning problem.
+
+### Chapter 9
+
+In the NFQ introduced in chapter 8, there are two major problems. (1) it violates the independently and identically distributed (IID) assumption of the data, and (2) the stationarity of targets.
+
+IID is violated because the samples are **not** independent since they come from a trajectory. The sample at time t+1 is dependent on the sample at time t. They are also not identically distributed because they depend on the policy that generates the action.
+
+The targets are not stationary since everytime we update the value function, the target changes too since we use the same value function to generate the targets.
+
+In this chapter we addressed these concerns by introducing two mechanisms:
+
+1. Using `Target Networks` : use a separate network that we can fix for multiple steps & reerve it for calculating more stationary targets. We call this the `target network`.
+2. Using `Experience Replay` : a buffer of experiences bigger than NFQ, but here we sample mini-batches at random from the buffer of experiences.
+
+**Specific Algorithms Covered**
+- `DQN` : NFQ that uses target networks and experience replay
+- `Double DQN` : DQN but instead we used double-learning - one for generating the behavior and one used as a target. The target is updated periodically, but the learning only happens with the behavior Q.
+
+### Chapter 10
+
+In this chapter we primarily introduce mechanisms to further improve sample efficiency of the value-based DRL methods introduced before.
+
+Mechanisms:
+
+1. Using a functional NN that splits the Q-function into V(s) and A(s,a). This allows us to squeeze information from samples coming from all actions through V and not just a single Q value for a particular (s,a).
+An important thing to remember here is that there is an `aggregating equation` to get Q from V and A, plain addition do not work here.
+
+2. `Prioritized Experience Replay (PER)`: using the idea of prioritizing experiences that are the *most promising* for learning. In RL, this measure of surprise is given by the TD error. Inside the experience tuple we attach the absolute TD error as an element and use that as score to pull out the top experiences. Here we don't just naively rank the experiences by score, but we have a couple of techniques how to use this score:
+- Draw experiences stochastically with probability proportional to the score
+- Rank-based prioritization (priorities as the reciprocal of the rank of the sample)
+
+Now. Using one distribution for estimating another one introduces bias in the estimates. So we also need to do "weighted importance sampling" by scaling the TD errors by weights calculated with the probabilities of each sample.
+
+3. `Polyak Averaging`: mixing in online network weights into the target network on every step in small percentages
+
+**Specific Algorithms Covered**
+- `Dueling DQN` - uses state-value V and advantage function A instead of a single Q.
+
+### Chapter 11
+
+In this chapter, we directly find the optimal policy instead of estimating the value function(s) through methods called `policy-gradient methods`. This solves several issues with value function estimation:
+
+1. State aliasing : in some partially observable MDPs / POMDPs, we might perceive the value or Q of one state as similar or equal to the value of another state, as in Q(s1, a1) ~ Q(s2,a2) when s1 is not equal to s2.
+2. Computing the target for hi-dimensional or continuous action spaces. When computing the target policy, we get the max of Q over all a's. This is easy if the action space is discrete, but an O(|A|) problem. In the cartpole environment, the action space is just F=-1 or F=1 which is lo-dimensional discrete. What hapens if we can apply various forces, or what about continuous values? Then computing max(Q(s,a)) now becomes burdensome.
+3. In some environments it is not straightforward to estimate a value function but straightforward to represent an optimal policy. Imagine slippery walk that is comprised of n states where n is big; around the middle of the walk the best policy would just to head all the way to the goal, but representing Q here requires approximating all the n's.
+
+Now, the goal with Policy Gradients method is to maximize a `performance objective`, in contrast with value-based methods which is to learn and evaluate policies. We call them `policy gradients` because we want to parametrize a policy and know how to change the parameters in order to maximize expected return.
+In general, we can use any policies here but it is easier to limit ourselves to *differentiable policies* so that it is computationally easier to improve them. In David Silver lectures he mentioned there are numerical methods to calculate gradients of nondifferentiable policies but let's just say here we limit ourselves to differentiable ones.
+
+The general workflow is:
+```
+                                evaluate current policy
+                                            |
+                                            |
+                                            v
+                            compute the performance objective
+                                            |
+                                            |
+                                            v
+    compute the gradient of the performance objective with respect to the policy parameters
+                                            |
+                                            |
+                                            v
+            update the policy parameters proportional to this gradient
+```
+
+**Specific Algorithms Covered**
+- `REINFORCE` - policy gradient method that uses total returns (as in MC-style) weighted by the gradient of log policy.
+- `Vanilla Policy Gradient (VPG)` or `REINFORCE with baseline`: Estimating both policy and value so that we can use the value to compute the advantage function. Further, we also added `negative weighted entropy` into the loss function to encourage the training to learn unevenly distributed actions (unambiguous policy).
+- `Asynchronous Actor Critic (A3C)`: To reduce variance, A3c uses n-step returns with bootstrapping to learn the policy and value function, and uses *concurrent actors* to asynchronously generate a broad set of experience samples in parallel with multiple worker-learners for each environment. *Hogwild!* was also introduced here, which is a method to parallelize the update from each environment's learners to the global policy and V function asynchronously without locks (Niu et. al 2011).
+- `Generalized Advantage Estimation (GAE)`: similar to A2C but uses TD(lambda)-like advantage but for advantages.
+- `Advantage Actor-Critic (A2C)`: The major change from A3C is that instead of having multiple learners (models), we have multiple actors that generates the experience but only a single learner. **Workers still run in parallel**.
+Another change is to share weights of some layers between the Policy and Value network. 
+
+### Chapter 12
+
+Here we discuss state-of-the-art algorithms as of the present.
+
+**Specific Algorithms Covered**
+- `Deep Deterministic Policy Gradient (DDPG)`: DQN but introduces a policy network that yields a continuous action space. Uses deterministic policy s->a but uses Gaussian noise to the deterministic action to encourage exploration.
+- `Twin-Delayed DDPG (TD3)`: Adds a double learning technique similar to DDQN; Adds noise to the action passed into the environment but to the target actions. Delays updates to the networks (the twin network updates more frequently).
+- `Soft Actor-Critic (SAC)`: Off-policy algorithm but trains a `stochastic policy` as in REINFORCE.
+- `Proximal Policy Optimization (PPO)`: An improvement to A2C, but introduces a clipped objective function that prevents the policy from getting too different after an optimization step (like a "coach preventing overreaction"). We use a similar clipping strategy in the value function.
