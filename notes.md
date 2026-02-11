@@ -329,6 +329,24 @@ The general workflow is:
 - `Advantage Actor-Critic (A2C)`: The major change from A3C is that instead of having multiple learners (models), we have multiple actors that generates the experience but only a single learner. **Workers still run in parallel**.
 Another change is to share weights of some layers between the Policy and Value network. 
 
+**Progression**
+```
+REINFORCE
+    |
+    | + GAE + Parallel async workers
+    v
+   A3C
+    |
+    | + synchronize the workers, single learner
+    v
+   A2C
+    |
+    | + fix wasteful data throwing after 1 update
+    | + solve variance by clipping policy gradient
+    v
+   PPO
+```
+
 ### Chapter 12
 
 Here we discuss state-of-the-art algorithms as of the present.
