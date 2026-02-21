@@ -330,21 +330,30 @@ The general workflow is:
 Another change is to share weights of some layers between the Policy and Value network. 
 
 **Progression**
+
+Two separate lineages solving different problems that converge at PPO:
 ```
-REINFORCE
+REINFORCE (1992)
+    |                                |
+    | + natural gradient,            | + GAE + parallel async workers
+    |   KL constraint                | + n-step returns
+    |   (trust region)               |
+    v                                v
+TRPO (2015, Schulman)             A3C (2016, Mnih et al.)
+    |                                |
+    | "how to update safely"         | "how to collect data efficiently"
+    |                                |
+    |                                | + synchronize the workers,
+    |                                |   single learner
+    |                                v
+    |                             A2C (2016)
+    |                                |
+    +------- merge ideas -----------+
     |
-    | + GAE + Parallel async workers
+    | + clipped objective (simple TRPO)
+    | + parallel actors (from A2C)
     v
-   A3C
-    |
-    | + synchronize the workers, single learner
-    v
-   A2C
-    |
-    | + fix wasteful data throwing after 1 update
-    | + solve variance by clipping policy gradient
-    v
-   PPO
+  PPO (2017, Schulman)
 ```
 
 ### Chapter 12
@@ -356,3 +365,20 @@ Here we discuss state-of-the-art algorithms as of the present.
 - `Twin-Delayed DDPG (TD3)`: Adds a double learning technique similar to DDQN; Adds noise to the action passed into the environment but to the target actions. Delays updates to the networks (the twin network updates more frequently).
 - `Soft Actor-Critic (SAC)`: Off-policy algorithm but trains a `stochastic policy` as in REINFORCE.
 - `Proximal Policy Optimization (PPO)`: An improvement to A2C, but introduces a clipped objective function that prevents the policy from getting too different after an optimization step (like a "coach preventing overreaction"). We use a similar clipping strategy in the value function.
+
+### Supplementary
+
+### Research evolution
+
+**The Bigger Picture**
+
+The evolution has two main threads:
+
+| Thread | Philosophy | Examples |
+|--------|-----------|----------|
+| **RL-based** | Keep the RL loop, simplify it | PPO → GRPO, RLOO |
+| **RL-free** | Bypass RL entirely, optimize directly from preferences | DPO, IPO, KTO, SimPO, ORPO |
+
+There's ongoing debate about which is better. RL-based methods (especially GRPO) have shown strong results for **reasoning tasks** (math, code) where you can define verifiable rewards. DPO-family methods are simpler and work well for **general alignment** but can suffer from distribution shift issues.
+
+DeepSeek-R1 notably used **GRPO with rule-based rewards** (correctness checking) rather than learned reward models, showing that when you have verifiable tasks, you don't even need human preference data — just RL with outcome verification.
